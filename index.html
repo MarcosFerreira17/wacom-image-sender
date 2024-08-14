@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./style.css" />
+    <title>Wacom Image Sender</title>
+</head>
+<body>
+    <div id="app">
+        <button onclick="connect()">CONNECT</button>
+        <input type="file" id="uploadImage" />
+        <button onclick="sendUploadedImage()">SEND UPLOADED IMAGE</button>
+        <button onclick="sendBase64Image()">SEND BASE64 IMAGE</button>
+    </div>
+
+    <script src="./renderer.js"></script>
+    <script src="./wacomstu540.js"></script>
+    <script>
+        var wacom = new wacomstu540();
+        var canvas = document.getElementById('myCanvas');
+        var context = canvas.getContext("2d");
+        var image;
+
+        async function connect() {
+            if (await wacom.connect()) {
+                console.log('Connected to Wacom device');
+            }
+        }
+
+        async function sendUploadedImage() {
+            var fileInput = document.getElementById('uploadImage');
+            var file = fileInput.files[0];
+            if (file && file.type.match('image.*')) {
+                var reader = new FileReader();
+                reader.onload = function(evt) {
+                    var img = new Image();
+                    img.onload = function() {
+                        context.drawImage(img, 0, 0, 800, 480);
+                        image = context.getImageData(0, 0, 800, 480).data;
+                        sendimage();
+                    }
+                    img.src = evt.target.result;
+                }
+                reader.readAsDataURL(file);
+            } else {
+                alert("Please upload a valid image file.");
+            }
+        }
+
+        async function sendBase64Image() {
+            var base64String = "your_base64_string_here"; // Substitua pela sua string base64
+            var img = new Image();
+            img.onload = function() {
+                context.drawImage(img, 0, 0, 800, 480);
+                image = context.getImageData(0, 0, 800, 480).data;
+                sendimage();
+            }
+            img.src = base64String;
+        }
+
+        async function sendimage() {
+            if (image) {
+                await wacom.setImage(image);
+                console.log('Image sent to Wacom device');
+            }
+        }
+    </script>
+</body>
+</html>
